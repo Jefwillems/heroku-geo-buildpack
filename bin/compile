@@ -63,7 +63,6 @@ fi
 vendor_lib "GDAL" "$GDAL_VERSION" "$VENDOR_DIR" "http://download.osgeo.org/gdal/$GDAL_VERSION/gdal-$GDAL_VERSION.tar.gz"
 vendor_lib "GEOS" "$GEOS_VERSION" "$VENDOR_DIR"
 vendor_lib "PROJ" "$PROJ_VERSION" "$VENDOR_DIR" "http://download.osgeo.org/proj/proj-$PROJ_VERSION.tar.gz"
-tree $VENDOR_DIR
 # Set environment variables for later buildpacks, so that the GDAL installation
 # can be found when pip installing GDAL, or by Django (eg during collectstatic).
 {
