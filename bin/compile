@@ -4,17 +4,22 @@ vendor_lib() {
     LIBRARY=$1
     VERSION=$2
     VENDOR_DIR=$3
-
+    LIB_URL=$4
+    
     echo "-----> Installing $LIBRARY-$VERSION"
-    LIBRARY_URL="https://bucketeer-9aa8f376-a619-404c-b004-6db0317bcfe8.s3.amazonaws.com/$STACK/$LIBRARY/$LIBRARY-$VERSION.tar.gz"
-
-    mkdir -p "$VENDOR_DIR"
-    if ! curl "${LIBRARY_URL}" -s | tar zxv -C "$VENDOR_DIR" &> /dev/null; then
-      echo " !     Requested $LIBRARY Version ($VERSION) is not available for this stack ($STACK)."
-      echo " !     Aborting."
-      exit 1
+    
+    if [ -z "$LIB_URL" ]; then
+        LIB_URL="https://bucketeer-9aa8f376-a619-404c-b004-6db0317bcfe8.s3.amazonaws.com/$STACK/$LIBRARY/$LIBRARY-$VERSION.tar.gz";
+    else
+        echo "LIB_URL is set to '$LIB_URL'";
     fi
-
+    mkdir -p "$VENDOR_DIR"
+    if ! curl "${LIB_URL}" -s | tar zxv -C "$VENDOR_DIR" &> /dev/null; then
+        echo " !     Requested $LIBRARY Version ($VERSION) is not available for this stack ($STACK)."
+        echo " !     Aborting."
+        exit 1
+    fi
+    
     mkdir -p "$CACHE_DIR/.heroku-geo-buildpack/"
     # Store library version for future reference
     echo "$VERSION" > "$CACHE_DIR/.heroku-geo-buildpack/$LIBRARY-version"
@@ -33,7 +38,7 @@ DEFAULT_PROJ_VERSION="5.2.0"
 
 if [ -f "$ENV_DIR/GDAL_VERSION" ]; then
     GDAL_VERSION=$(cat "$ENV_DIR/GDAL_VERSION")
-elif [ -f "$CACHE_DIR/.heroku-geo-buildpack/GDAL-version" ]; then
+    elif [ -f "$CACHE_DIR/.heroku-geo-buildpack/GDAL-version" ]; then
     GDAL_VERSION=$(cat "$CACHE_DIR/.heroku-geo-buildpack/GDAL-version")
 else
     GDAL_VERSION=$DEFAULT_GDAL_VERSION
@@ -41,7 +46,7 @@ fi
 
 if [ -f "$ENV_DIR/GEOS_VERSION" ]; then
     GEOS_VERSION=$(cat "$ENV_DIR/GEOS_VERSION")
-elif [ -f "$CACHE_DIR/.heroku-geo-buildpack/GEOS-version" ]; then
+    elif [ -f "$CACHE_DIR/.heroku-geo-buildpack/GEOS-version" ]; then
     GEOS_VERSION=$(cat "$CACHE_DIR/.heroku-geo-buildpack/GEOS-version")
 else
     GEOS_VERSION=$DEFAULT_GEOS_VERSION
@@ -49,7 +54,7 @@ fi
 
 if [ -f "$ENV_DIR/PROJ_VERSION" ]; then
     PROJ_VERSION=$(cat "$ENV_DIR/PROJ_VERSION")
-elif [ -f "$CACHE_DIR/.heroku-geo-buildpack/PROJ-version" ]; then
+    elif [ -f "$CACHE_DIR/.heroku-geo-buildpack/PROJ-version" ]; then
     PROJ_VERSION=$(cat "$CACHE_DIR/.heroku-geo-buildpack/PROJ-version")
 else
     PROJ_VERSION=$DEFAULT_PROJ_VERSION
@@ -62,15 +67,15 @@ vendor_lib "PROJ" "$PROJ_VERSION" "$VENDOR_DIR"
 # Set environment variables for later buildpacks, so that the GDAL installation
 # can be found when pip installing GDAL, or by Django (eg during collectstatic).
 {
-  echo "export GDAL_LIBRARY_PATH=\"$BUILD_DIR/.heroku-geo-buildpack/vendor/lib/libgdal.so\""
-  echo "export GEOS_LIBRARY_PATH=\"$BUILD_DIR/.heroku-geo-buildpack/vendor/lib/libgeos_c.so\""
-  echo "export PROJ4_LIBRARY_PATH=\"$BUILD_DIR/.heroku-geo-buildpack/vendor/lib/libproj.so\""
-  echo "export GDAL_DATA=\"$BUILD_DIR/.heroku-geo-buildpack/vendor/share/gdal\""
-  echo "export PATH=\"$BUILD_DIR/.heroku-geo-buildpack/vendor/bin:\$PATH\""
-  echo "export LIBRARY_PATH=\"$BUILD_DIR/.heroku-geo-buildpack/vendor/lib:\$LIBRARY_PATH\""
-  echo "export LD_LIBRARY_PATH=\"$BUILD_DIR/.heroku-geo-buildpack/vendor/lib:\$LD_LIBRARY_PATH\""
-  echo "export CPLUS_INCLUDE_PATH=\"$BUILD_DIR/.heroku-geo-buildpack/vendor/include:\$CPLUS_INCLUDE_PATH\""
-  echo "export C_INCLUDE_PATH=\"$BUILD_DIR/.heroku-geo-buildpack/vendor/include:\$C_INCLUDE_PATH\""
+    echo "export GDAL_LIBRARY_PATH=\"$BUILD_DIR/.heroku-geo-buildpack/vendor/lib/libgdal.so\""
+    echo "export GEOS_LIBRARY_PATH=\"$BUILD_DIR/.heroku-geo-buildpack/vendor/lib/libgeos_c.so\""
+    echo "export PROJ4_LIBRARY_PATH=\"$BUILD_DIR/.heroku-geo-buildpack/vendor/lib/libproj.so\""
+    echo "export GDAL_DATA=\"$BUILD_DIR/.heroku-geo-buildpack/vendor/share/gdal\""
+    echo "export PATH=\"$BUILD_DIR/.heroku-geo-buildpack/vendor/bin:\$PATH\""
+    echo "export LIBRARY_PATH=\"$BUILD_DIR/.heroku-geo-buildpack/vendor/lib:\$LIBRARY_PATH\""
+    echo "export LD_LIBRARY_PATH=\"$BUILD_DIR/.heroku-geo-buildpack/vendor/lib:\$LD_LIBRARY_PATH\""
+    echo "export CPLUS_INCLUDE_PATH=\"$BUILD_DIR/.heroku-geo-buildpack/vendor/include:\$CPLUS_INCLUDE_PATH\""
+    echo "export C_INCLUDE_PATH=\"$BUILD_DIR/.heroku-geo-buildpack/vendor/include:\$C_INCLUDE_PATH\""
 } >> "$BP_DIR/export"
 
 PROFILE_PATH="$BUILD_DIR/.profile.d/heroku-geo-buildpack.sh"
@@ -79,11 +84,11 @@ mkdir -p "$(dirname "$PROFILE_PATH")"
 # Export vars
 # shellcheck disable=SC2016
 {
-  echo 'export GDAL_LIBRARY_PATH="$HOME/.heroku-geo-buildpack/vendor/lib/libgdal.so"'
-  echo 'export GEOS_LIBRARY_PATH="$HOME/.heroku-geo-buildpack/vendor/lib/libgeos_c.so"'
-  echo 'export PROJ4_LIBRARY_PATH="$HOME/.heroku-geo-buildpack/vendor/lib/libproj.so"'
-  echo 'export GDAL_DATA="$HOME/.heroku-geo-buildpack/vendor/share/gdal"'
-  echo 'export PATH="$HOME/.heroku-geo-buildpack/vendor/bin:$PATH"'
-  echo 'export LIBRARY_PATH="$HOME/.heroku-geo-buildpack/vendor/lib:$LIBRARY_PATH"'
-  echo 'export LD_LIBRARY_PATH="$HOME/.heroku-geo-buildpack/vendor/lib:$LD_LIBRARY_PATH"'
+    echo 'export GDAL_LIBRARY_PATH="$HOME/.heroku-geo-buildpack/vendor/lib/libgdal.so"'
+    echo 'export GEOS_LIBRARY_PATH="$HOME/.heroku-geo-buildpack/vendor/lib/libgeos_c.so"'
+    echo 'export PROJ4_LIBRARY_PATH="$HOME/.heroku-geo-buildpack/vendor/lib/libproj.so"'
+    echo 'export GDAL_DATA="$HOME/.heroku-geo-buildpack/vendor/share/gdal"'
+    echo 'export PATH="$HOME/.heroku-geo-buildpack/vendor/bin:$PATH"'
+    echo 'export LIBRARY_PATH="$HOME/.heroku-geo-buildpack/vendor/lib:$LIBRARY_PATH"'
+    echo 'export LD_LIBRARY_PATH="$HOME/.heroku-geo-buildpack/vendor/lib:$LD_LIBRARY_PATH"'
 } >> "$PROFILE_PATH"
