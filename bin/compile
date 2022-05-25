@@ -9,7 +9,7 @@ vendor_lib() {
     echo "-----> Installing $LIBRARY-$VERSION"
     
     if [ -z "$LIB_URL" ]; then
-        LIB_URL="https://bucketeer-9aa8f376-a619-404c-b004-6db0317bcfe8.s3.amazonaws.com/$STACK/$LIBRARY/$LIBRARY-$VERSION.tar.gz";
+        LIB_URL="https://heroku-buildpack-geo.s3.amazonaws.com/$STACK/$LIBRARY/$LIBRARY-$VERSION.tar.gz";
     else
         echo "LIB_URL is set to '$LIB_URL'";
     fi
